@@ -1,4 +1,3 @@
-
 export default {
   Base: '/api',
   Users: {

@@ -1,7 +1,6 @@
 import { isNumber, isDate } from 'jet-validators';
 import { transform } from 'jet-validators/utils';
 
-
 /******************************************************************************
                                 Functions
 ******************************************************************************/
@@ -17,6 +16,6 @@ export function isRelationalKey(arg: unknown): arg is number {
  * Convert to date object then check is a validate date.
  */
 export const transIsDate = transform(
-  arg => new Date(arg as string),
-  arg => isDate(arg),
+  (arg) => new Date(arg as string),
+  (arg) => isDate(arg),
 );

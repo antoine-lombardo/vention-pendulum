@@ -1,6 +1,5 @@
 import { Response, Request } from 'express';
 
-
 /******************************************************************************
                                 Types
 ******************************************************************************/
@@ -8,4 +7,3 @@ import { Response, Request } from 'express';
 type TRecord = Record<string, unknown>;
 export type IReq = Request<TRecord, void, TRecord, TRecord>;
 export type IRes = Response<unknown, TRecord>;
-
