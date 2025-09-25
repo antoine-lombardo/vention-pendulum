@@ -14,11 +14,12 @@ const SERVER_START_MSG =
                                   Run
 ******************************************************************************/
 
+// Catch server errors
+server.on('error', (err) => {
+  logger.err(err.message);
+});
+
 // Start the server
-server.listen(ENV.Port, (err) => {
-  if (!!err) {
-    logger.err(err.message);
-  } else {
-    logger.info(SERVER_START_MSG);
-  }
+server.listen(ENV.Port, () => {
+  logger.info(SERVER_START_MSG);
 });

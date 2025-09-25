@@ -1,5 +1,7 @@
 import morgan from 'morgan';
 import path from 'path';
+import http from 'http';
+import WebSocket from 'ws';
 import helmet from 'helmet';
 import express, { Request, Response, NextFunction } from 'express';
 import logger from 'jet-logger';
@@ -17,6 +19,8 @@ import { NodeEnvs } from '@src/common/constants';
 ******************************************************************************/
 
 const app = express();
+const server = http.createServer(app);
+const wsserver = new WebSocket.Server({ server: server });
 
 // **** Middleware **** //
 
@@ -73,8 +77,17 @@ app.get('/users', (_: Request, res: Response) => {
   return res.sendFile('users.html', { root: viewsDir });
 });
 
+// **** WebSocket Testing **** //
+
+wsserver.on('connection', function connection(ws) {
+  ws.on('message', function incoming(message) {
+    logger.info(message);
+    ws.send('Welcome to Vention Pendulum WebSocket.');
+  });
+});
+
 /******************************************************************************
                                 Export default
 ******************************************************************************/
 
-export default app;
+export default server;

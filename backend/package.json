@@ -27,7 +27,9 @@
     "jet-validators": "^1.4.3",
     "jsonfile": "^6.2.0",
     "module-alias": "^2.2.3",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "websocket": "^1.0.35",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
@@ -42,6 +44,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.5.2",
     "@types/supertest": "^6.0.3",
+    "@types/ws": "^8.18.1",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^17.23.1",
