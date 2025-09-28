@@ -20,7 +20,15 @@ import { NodeEnvs } from '@src/common/constants';
 
 const app = express();
 const server = http.createServer(app);
-const wsserver = new WebSocket.Server({ server: server });
+export const wss = new WebSocket.Server({ server: server });
+
+export const broadcast = (message: string) => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+};
 
 // **** Middleware **** //
 
@@ -79,7 +87,7 @@ app.get('/users', (_: Request, res: Response) => {
 
 // **** WebSocket Testing **** //
 
-wsserver.on('connection', function connection(ws) {
+wss.on('connection', function connection(ws) {
   ws.on('message', function incoming(message) {
     logger.info(message);
     ws.send('Welcome to Vention Pendulum WebSocket.');
