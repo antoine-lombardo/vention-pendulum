@@ -37,8 +37,8 @@ function start(req: IReq, res: IRes) {
   const options = Validators.start(req.body) as SimulationOptions;
   SimulationService.start(options);
   res.status(HttpStatusCodes.OK).json({
+    ...SimulationService.getStatus(),
     message: 'Simulation started',
-    status: SimulationService.getStatus(),
   });
 }
 

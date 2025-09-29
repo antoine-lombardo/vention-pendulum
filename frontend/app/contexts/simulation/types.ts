@@ -27,10 +27,11 @@ export interface SimulationOptions {
 
 export interface CurrentSimulation {
   state: SimulationState;
+  options: SimulationOptions;
 }
 
 export interface SimulationState {
-  status: 'running' | 'stopped' | 'ended' | 'error';
+  status: 'idle' | 'running' | 'stopped' | 'ended' | 'error';
   elapsedTime: number;
   pendulums: PendulumState[];
 }
