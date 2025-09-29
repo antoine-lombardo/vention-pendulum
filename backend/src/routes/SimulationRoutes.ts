@@ -36,7 +36,10 @@ const Validators = {
 function start(req: IReq, res: IRes) {
   const options = Validators.start(req.body) as SimulationOptions;
   SimulationService.start(options);
-  res.status(HttpStatusCodes.OK).json({ message: 'Simulation started' });
+  res.status(HttpStatusCodes.OK).json({
+    message: 'Simulation started',
+    status: SimulationService.getStatus(),
+  });
 }
 
 /**

@@ -5,6 +5,7 @@ import WebSocket from 'ws';
 import helmet from 'helmet';
 import express, { Request, Response, NextFunction } from 'express';
 import logger from 'jet-logger';
+import cors from 'cors';
 
 import BaseRouter from '@src/routes';
 
@@ -33,6 +34,7 @@ export const broadcast = (message: string) => {
 // **** Middleware **** //
 
 // Basic middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
