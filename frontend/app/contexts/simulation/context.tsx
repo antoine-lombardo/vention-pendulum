@@ -78,6 +78,7 @@ const SimulationContext = createContext<{
   isReady: boolean;
   states: PendulumState[];
   options: SimulationOptions;
+  getCommonStatus: () => PendulumStatus;
   start: () => void;
   stop: () => void;
   pause: () => void;
@@ -88,6 +89,7 @@ const SimulationContext = createContext<{
   isReady: false,
   states: [],
   options: DEFAULT_OPTIONS,
+  getCommonStatus: () => PendulumStatus.NOT_SYNCED,
   start: () => {
     /* empty */
   },
@@ -170,6 +172,19 @@ export const SimulationProvider = ({
       });
   }, [readyState]);
 
+  const getCommonStatus = () => {
+    let commonStatus = PendulumStatus.NOT_SYNCED;
+    for (const pendulum of states) {
+      if (commonStatus === PendulumStatus.NOT_SYNCED) {
+        commonStatus = pendulum.status;
+      } else if (commonStatus !== pendulum.status) {
+        commonStatus = PendulumStatus.NOT_SYNCED;
+        break;
+      }
+    }
+    return commonStatus;
+  };
+
   const start = () => {
     console.log('Starting simulation with options:', options);
     axios
@@ -244,6 +259,7 @@ export const SimulationProvider = ({
         isReady,
         states,
         options,
+        getCommonStatus,
         start,
         stop,
         pause,

@@ -15,6 +15,7 @@ export enum PendulumStatus {
   PAUSED,
   WAITING_FOR_RESTART,
   ERROR,
+  NOT_SYNCED,
 }
 
 export interface PendulumState {
