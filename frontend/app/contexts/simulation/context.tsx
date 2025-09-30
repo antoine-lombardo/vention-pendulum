@@ -25,31 +25,6 @@ const DEFAULT_OPTIONS: SimulationOptions = {
   },
 };
 
-// const getIdleState = (options: SimulationOptions): SimulationState => {
-//   return {
-//     status: 'idle',
-//     elapsedTime: 0,
-//     pendulums: options.pendulums.map((opt) => ({
-//       angle: opt.angle,
-//       position: calculatePosition(opt.angle, opt),
-//     })),
-//   };
-// };
-
-// const calculatePosition = (
-//   angle: number,
-//   options: PendulumOptions,
-// ): { x: number; y: number } => {
-//   if (angle === 0)
-//     return { x: options.anchor.x, y: options.anchor.y + options.length };
-//   return {
-//     x:
-//       options.anchor.x +
-//       (angle < 0 ? -1 : 1) * Math.sin(Math.abs(angle)) * options.length,
-//     y: options.anchor.y + Math.cos(Math.abs(angle)) * options.length,
-//   };
-// };
-
 const calculateLength = (
   position: { x: number; y: number },
   options: PendulumOptions,
@@ -146,6 +121,10 @@ export const SimulationProvider = ({
   const [options, setOptions] = useState<SimulationOptions>(DEFAULT_OPTIONS);
   const { readyState } = useWebSocket({
     url: WS_URL,
+    shouldReconnect: true,
+    reconnectInterval: 1000,
+    maxReconnectAttempts: 100000000,
+    retryOnError: true,
     onMessage: (event) => {
       let message: WSMessage | undefined = undefined;
       try {
@@ -186,16 +165,18 @@ export const SimulationProvider = ({
       setIsReady(false);
       return;
     }
-    axios
-      .get<SimulationStatusResponse>(`${BASE_URL}/simulation`, {})
-      .then((response) => {
-        setOptions(response.data.options);
-        setStates(response.data.states);
-        setIsReady(true);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    setTimeout(() => {
+      axios
+        .get<SimulationStatusResponse>(`${BASE_URL}/simulation`, {})
+        .then((response) => {
+          setOptions(response.data.options);
+          setStates(response.data.states);
+          setIsReady(true);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }, 1000);
   }, [readyState]);
 
   const getCommonStatus = () => {
