@@ -26,16 +26,6 @@ const COLLISION_TIMEOUT = 5;
 
 let options = (workerData as PendulumWorkerData).options;
 const index = (workerData as PendulumWorkerData).index;
-// const states: PendulumState[] = options.pendulums.map((pendulum, i) => {
-//   return {
-//     status: PendulumStatus.IDLE,
-//     angle: options.pendulums[i].angle,
-//     position: calculatePosition(
-//       options.pendulums[i].angle,
-//       options.pendulums[i],
-//     ),
-//   };
-// });
 let startTime = 0;
 let pauseTime = 0;
 const exitEvent = false;
@@ -253,7 +243,7 @@ const sleep = async (ms: number) => {
 
 const pendulumTick = (time: number) => {
   const timeSinceStart = (time - startTime) / 1000;
-  setAngle(calculateAngle(timeSinceStart, options.pendulums[index]));
+  setAngle(calculateAngle(timeSinceStart, options.pendulums[index], options));
   setPosition(
     calculatePosition(getAngle(f64, index), options.pendulums[index]),
   );
@@ -280,45 +270,52 @@ parentPort?.on('message', messageHandler);
 ******************************************************************************/
 
 const workerFunc = async () => {
-  logger.info(`Pendulum #${index} worker started`);
-  setStatus(PendulumStatus.IDLE);
-  setAngle(options.pendulums[index].angle);
-  setPosition(
-    calculatePosition(options.pendulums[index].angle, options.pendulums[index]),
-  );
-  let nextRefresh = Date.now();
-  while (!exitEvent) {
-    // Wait to respect the max refresh rate
-    const delay = nextRefresh - Date.now();
-    if (delay > 0) {
-      await sleep(delay);
-    }
+  try {
+    logger.info(`Pendulum #${index} worker started`);
+    setStatus(PendulumStatus.IDLE);
+    setAngle(options.pendulums[index].angle);
+    setPosition(
+      calculatePosition(
+        options.pendulums[index].angle,
+        options.pendulums[index],
+      ),
+    );
+    let nextRefresh = Date.now();
+    while (!exitEvent) {
+      // Wait to respect the max refresh rate
+      const delay = nextRefresh - Date.now();
+      if (delay > 0) {
+        await sleep(delay);
+      }
 
-    switch (getStatus(un8, index)) {
-      case PendulumStatus.RUNNING: {
-        pendulumTick(nextRefresh);
-        break;
+      switch (getStatus(un8, index)) {
+        case PendulumStatus.RUNNING: {
+          pendulumTick(nextRefresh);
+          break;
+        }
+        case PendulumStatus.WAITING_FOR_RESTART: {
+          if (!restartSent) sendRestart();
+          if (!readyToRestart(nextRefresh)) break;
+          setAngle(options.pendulums[index].angle);
+          setPosition(
+            calculatePosition(
+              options.pendulums[index].angle,
+              options.pendulums[index],
+            ),
+          );
+          startTime = restartTime();
+          clearReceivedRestarts();
+          collisionTime = 0;
+          setStatus(PendulumStatus.RUNNING);
+          break;
+        }
       }
-      case PendulumStatus.WAITING_FOR_RESTART: {
-        if (!restartSent) sendRestart();
-        if (!readyToRestart(nextRefresh)) break;
-        setAngle(options.pendulums[index].angle);
-        setPosition(
-          calculatePosition(
-            options.pendulums[index].angle,
-            options.pendulums[index],
-          ),
-        );
-        startTime = restartTime();
-        clearReceivedRestarts();
-        collisionTime = 0;
-        setStatus(PendulumStatus.RUNNING);
-        break;
-      }
+      nextRefresh = nextRefresh + 1000 / MAX_REFRESH_RATE;
     }
-    nextRefresh = nextRefresh + 1000 / MAX_REFRESH_RATE;
+    logger.info(`Pendulum #${index} worker stopped: Exit event received.`);
+  } catch (e) {
+    logger.err(e);
   }
-  logger.info(`Pendulum #${index} worker stopped: Exit event received.`);
 };
 
 workerFunc();

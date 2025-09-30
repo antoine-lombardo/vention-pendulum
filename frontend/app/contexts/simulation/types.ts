@@ -29,7 +29,6 @@ export interface PendulumState {
 export interface SimulationOptions {
   pendulums: PendulumOptions[];
   wind: {
-    enabled: boolean;
     direction: number;
     velocity: number;
   };

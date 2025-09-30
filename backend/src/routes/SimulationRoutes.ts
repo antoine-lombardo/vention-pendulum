@@ -24,6 +24,10 @@ const Validators = {
         y: isNumber,
       }),
     }),
+    wind: testObject({
+      velocity: isNumber,
+      direction: isNumber,
+    }),
   }),
 } as const;
 

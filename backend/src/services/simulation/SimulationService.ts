@@ -58,7 +58,6 @@ const DEFAULT_OPTIONS: SimulationOptions = {
     },
   ],
   wind: {
-    enabled: false,
     direction: 0,
     velocity: 0,
   },

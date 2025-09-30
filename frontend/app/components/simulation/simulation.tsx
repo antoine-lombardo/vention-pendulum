@@ -14,6 +14,7 @@ import { PendulumStatus } from '~/contexts/simulation/types';
 import { useSimulation } from '~/contexts/simulation';
 import { useEffect, useRef, useState } from 'react';
 import { PendulumMass } from './pendulum-mass';
+import { Wind } from './wind';
 
 export function Simulation() {
   const { isReady, states, options, getCommonStatus } = useSimulation();
@@ -149,6 +150,7 @@ export function Simulation() {
             {angles}
             {anchorPositions}
             {masses}
+            <Wind />
           </Layer>
         </Stage>
         <div className="absolute bottom-2 right-4 text-lg">{status}</div>

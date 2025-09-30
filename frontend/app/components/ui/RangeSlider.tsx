@@ -48,8 +48,8 @@ export default function RangeSlider(props: {
           }}
         ></input>
         {props.showValue && (
-          <div className="w-16 text-right text-sm">
-            {(props.decimals
+          <div className="w-18 text-right text-sm">
+            {(props.decimals !== undefined
               ? props.value.toFixed(props.decimals)
               : props.value) + (props.unit ? ` ${props.unit}` : '')}
           </div>

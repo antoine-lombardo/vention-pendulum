@@ -1,4 +1,5 @@
 import { Text } from 'react-konva';
+import { MASS_RADIUS_RATIO } from '~/common/globals/simulation';
 import { useSimulation } from '~/contexts/simulation';
 
 export function PendulumMass(props: { index: number }) {
@@ -7,7 +8,13 @@ export function PendulumMass(props: { index: number }) {
   return (
     <Text
       key={props.index}
-      text={(options.pendulums[props.index].radius * 100).toFixed(1) + ' kg'}
+      text={
+        (
+          options.pendulums[props.index].radius *
+          MASS_RADIUS_RATIO *
+          1000
+        ).toFixed(0) + ' g'
+      }
       x={states[props.index].position.x - 0.05}
       y={
         states[props.index].position.y +

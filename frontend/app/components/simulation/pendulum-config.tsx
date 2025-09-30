@@ -2,20 +2,15 @@ import { useSimulation } from '~/contexts/simulation';
 import RangeSlider from '../ui/RangeSlider';
 import {
   ANCHOR_LINE_Y,
+  MASS_RADIUS_RATIO,
   PENDULUM_COLORS,
   SCENE_HEIGHT,
 } from '~/common/globals/simulation';
 import { PendulumStatus } from '~/contexts/simulation/types';
 
 export function PendulumConfig(props: { index: number }) {
-  const {
-    options,
-    setAnchor,
-    setAngle,
-    setLength,
-    setRadius,
-    getCommonStatus,
-  } = useSimulation();
+  const { options, setAnchor, setAngle, setLength, setMass, getCommonStatus } =
+    useSimulation();
 
   const isDisabled = getCommonStatus() !== PendulumStatus.IDLE;
 
@@ -70,14 +65,14 @@ export function PendulumConfig(props: { index: number }) {
 
       <RangeSlider
         label="Mass"
-        value={options.pendulums[props.index].radius * 100}
-        onValueChange={(value) => setRadius(props.index, value / 100)}
+        value={options.pendulums[props.index].radius * MASS_RADIUS_RATIO * 1000}
+        onValueChange={(value) => setMass(props.index, value / 1000)}
         showValue
-        unit="kg"
-        min={1}
-        max={7}
-        step={0.1}
-        decimals={1}
+        unit="g"
+        min={100}
+        max={1000}
+        step={10}
+        decimals={0}
         color={PENDULUM_COLORS[props.index]}
         disabled={isDisabled}
       />

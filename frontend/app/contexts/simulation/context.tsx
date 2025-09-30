@@ -12,6 +12,7 @@ import type {
   APIMessage,
   SimulationStatusResponse,
 } from '~/common/types/APIMessages';
+import { MASS_RADIUS_RATIO } from '~/common/globals/simulation';
 
 const HOSTNAME = 'localhost:3000';
 const WS_URL = `ws://${HOSTNAME}`;
@@ -19,7 +20,6 @@ const BASE_URL = `http://${HOSTNAME}/api`;
 const DEFAULT_OPTIONS: SimulationOptions = {
   pendulums: [],
   wind: {
-    enabled: false,
     direction: 0,
     velocity: 0,
   },
@@ -76,7 +76,9 @@ const SimulationContext = createContext<{
   setAnchor: (index: number, position: { x: number; y: number }) => void;
   setAngle: (index: number, angle: number) => void;
   setLength: (index: number, length: number) => void;
-  setRadius: (index: number, radius: number) => void;
+  setMass: (index: number, mass: number) => void;
+  setWindVelocity: (velocity: number) => void;
+  setWindDirection: (direction: number) => void;
 }>({
   isReady: false,
   states: [],
@@ -106,7 +108,13 @@ const SimulationContext = createContext<{
   setLength: () => {
     /* empty */
   },
-  setRadius: () => {
+  setMass: () => {
+    /* empty */
+  },
+  setWindVelocity: () => {
+    /* empty */
+  },
+  setWindDirection: () => {
     /* empty */
   },
 });
@@ -306,13 +314,27 @@ export const SimulationProvider = ({
     });
   };
 
-  const setRadius = (index: number, radius: number) => {
+  const setMass = (index: number, mass: number) => {
     setOptions((prev) => {
       const newOptions = { ...prev };
       newOptions.pendulums[index] = {
         ...newOptions.pendulums[index],
-        radius,
+        mass,
+        radius: mass / MASS_RADIUS_RATIO,
       };
+      return newOptions;
+    });
+  };
+
+  const setWindVelocity = (velocity: number) => {
+    setOptions((prev) => {
+      const newOptions = { ...prev, wind: { ...prev.wind, velocity } };
+      return newOptions;
+    });
+  };
+  const setWindDirection = (direction: number) => {
+    setOptions((prev) => {
+      const newOptions = { ...prev, wind: { ...prev.wind, direction } };
       return newOptions;
     });
   };
@@ -332,7 +354,9 @@ export const SimulationProvider = ({
         setAnchor,
         setAngle,
         setLength,
-        setRadius,
+        setMass,
+        setWindVelocity,
+        setWindDirection,
       }}
     >
       {children}
