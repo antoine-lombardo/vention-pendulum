@@ -1,6 +1,7 @@
 {
   "name": "vention-pendulum-backend",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "build": "ts-node ./scripts/build.ts",
     "clean-install": "rm -rf ./node_modules && rm -r package-lock.json && npm i",
