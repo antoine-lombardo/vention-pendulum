@@ -47,7 +47,7 @@ export default function Simulator() {
   }
 
   return (
-    <div className="w-screen h-screen bg-[#0d1521] px-8 py-12 text-white flex flex-col items-center gap-2">
+    <div className="w-screen h-screen overflow-y-auto bg-[#0d1521] px-8 py-12 text-white flex flex-col items-center gap-2">
       <img src={VentionLogo} alt="Vention Logo" className="w-lg" />
       <div className="w-full max-w-xl text-center text-4xl font-medium mb-8">
         Pendulum Simulator
