@@ -1,5 +1,4 @@
 import morgan from 'morgan';
-import path from 'path';
 import http from 'http';
 import WebSocket from 'ws';
 import helmet from 'helmet';
