@@ -1,34 +1,52 @@
-import { SimulationOptions } from '@src/models/SimulationTypes';
 import { Worker, parentPort, workerData } from 'worker_threads';
-import { WorkerMessage } from './WorkerTypes';
+import { MainWorkerData, WorkerMessage } from './WorkerTypes';
 import logger from 'jet-logger';
 
 /******************************************************************************
                              Local variables
 ******************************************************************************/
 
-const options = workerData as SimulationOptions;
+const options = (workerData as MainWorkerData).options;
 const workers: Worker[] = [];
+
+/******************************************************************************
+                              Shared Arrays
+******************************************************************************/
+
+const f64 = new Float64Array((workerData as MainWorkerData).f64);
+const un8 = new Uint8Array((workerData as MainWorkerData).un8);
 
 /******************************************************************************
                                 Functions
 ******************************************************************************/
 
-const messageHandler = (message: WorkerMessage) => {
-  // Message to a specific pendulum
-  if (typeof message.to === 'number') {
-    workers[message.to].postMessage(message);
-  }
-  // Message to all pendulums
-  if (message.to === 'pendulums') {
-    for (const worker of workers) {
-      worker.postMessage(message);
+const messageProxy = (message: WorkerMessage) => {
+  for (const recipient of message.to) {
+    // Message to a specific pendulum
+    if (typeof recipient === 'number') {
+      workers[recipient].postMessage(message);
+    }
+    // Message to all pendulums
+    if (recipient === 'pendulums') {
+      for (let i = 0; i < workers.length; i++) {
+        if (message.from === i) continue;
+        workers[i].postMessage(message);
+      }
+    }
+    // Message to server
+    if (recipient === 'server') {
+      parentPort?.postMessage(message);
+    }
+    // Message to me
+    if (recipient === 'main') {
+      messageHandler(message);
     }
   }
-  // Message to server
-  if (message.to === 'server') {
-    parentPort?.postMessage(message);
-  }
+};
+
+const messageHandler = (message: WorkerMessage) => {
+  // Nothing to handle yet
+  return;
 };
 
 const addPendulum = async () => {
@@ -39,12 +57,14 @@ const addPendulum = async () => {
         workerData: {
           index: workers.length,
           options,
+          f64: (workerData as MainWorkerData).f64,
+          un8: (workerData as MainWorkerData).un8,
         },
       }),
     );
     workers[index].on('error', resolve);
     workers[index].on('exit', resolve);
-    workers[index].on('message', messageHandler); // worker sends result back
+    workers[index].on('message', messageProxy); // worker sends result back
   });
 };
 
@@ -53,7 +73,7 @@ const addPendulum = async () => {
 ******************************************************************************/
 
 // Handle messages from the server
-parentPort?.on('message', messageHandler);
+parentPort?.on('message', messageProxy);
 
 /******************************************************************************
                                Worker Function

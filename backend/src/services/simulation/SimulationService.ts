@@ -1,18 +1,21 @@
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 import { RouteError } from '@src/common/util/route-errors';
-import { SimulationOptions, PendulumState } from '@src/models/SimulationTypes';
+import {
+  SimulationOptions,
+  PendulumState,
+  PendulumStatus,
+} from '@src/models/SimulationTypes';
 import { broadcast } from '@src/server';
 import { Worker } from 'worker_threads';
 import logger from 'jet-logger';
 import { calculatePosition } from './SimulationUtils';
 import {
-  PauseMessage,
-  ResumeMessage,
+  MainWorkerData,
   StartMessage,
   StateMessage,
-  StopMessage,
   WorkerMessage,
 } from './workers/WorkerTypes';
+import { getState, getStatus } from './workers/WorkerUtils';
 
 /******************************************************************************
                                 Constants
@@ -29,30 +32,35 @@ const DEFAULT_OPTIONS: SimulationOptions = {
       angle: -0.5,
       length: 0.3,
       mass: 0.2,
+      radius: 0.02,
     },
     {
       anchor: { x: 0.3, y: ANCHOR_LINE_Y },
       angle: -0.3,
       length: 0.3,
       mass: 0.2,
+      radius: 0.02,
     },
     {
       anchor: { x: 0.45, y: ANCHOR_LINE_Y },
       angle: -0.1,
       length: 0.2,
       mass: 0.2,
+      radius: 0.02,
     },
     {
       anchor: { x: 0.6, y: ANCHOR_LINE_Y },
       angle: 0.15,
       length: 0.25,
       mass: 0.2,
+      radius: 0.02,
     },
     {
       anchor: { x: 0.75, y: ANCHOR_LINE_Y },
       angle: 0.45,
       length: 0.1,
       mass: 0.2,
+      radius: 0.02,
     },
   ],
   wind: {
@@ -63,17 +71,23 @@ const DEFAULT_OPTIONS: SimulationOptions = {
 };
 
 /******************************************************************************
+                              Shared Arrays
+******************************************************************************/
+
+const f64Buf = new SharedArrayBuffer(
+  Float64Array.BYTES_PER_ELEMENT * DEFAULT_OPTIONS.pendulums.length * 3, // x, y, angle
+);
+const un8Buf = new SharedArrayBuffer(
+  Uint8Array.BYTES_PER_ELEMENT * DEFAULT_OPTIONS.pendulums.length * 1, // status
+);
+const f64 = new Float64Array(f64Buf);
+const un8 = new Uint8Array(un8Buf);
+
+/******************************************************************************
                              Local variables
 ******************************************************************************/
 
 const options = { ...DEFAULT_OPTIONS };
-const states: PendulumState[] = options.pendulums.map((opt) => {
-  return {
-    status: 'idle',
-    angle: opt.angle,
-    position: calculatePosition(opt.angle, opt),
-  };
-});
 
 /******************************************************************************
                                   Workers
@@ -81,21 +95,27 @@ const states: PendulumState[] = options.pendulums.map((opt) => {
 
 let worker: Worker;
 
+const sendMessage = (message: WorkerMessage) => {
+  worker.postMessage(message);
+};
+
 const messageHandler = (message: WorkerMessage) => {
-  if (message.to !== 'server') return;
+  if (!message.to.some((x) => x === 'server')) return;
 
   switch (message.event) {
     case 'state': {
-      const stateMessage = message as StateMessage;
-      states[stateMessage.from] = stateMessage.data.state;
-      broadcast(JSON.stringify(stateMessage));
+      broadcast(JSON.stringify(message));
     }
   }
 };
 
 function initWorker() {
   worker = new Worker('./src/services/simulation/workers/MainWorker.js', {
-    workerData: options,
+    workerData: {
+      options,
+      f64: f64Buf,
+      un8: un8Buf,
+    } as MainWorkerData,
   });
 
   worker.on('message', messageHandler);
@@ -117,21 +137,21 @@ initWorker();
  */
 const start = (options: SimulationOptions) => {
   // Fail if the simulation is not stopped
-  if (!isStopped()) {
+  if (!areAllStopped()) {
     throw new RouteError(HttpStatusCodes.CONFLICT, ALREADY_RUNNING_ERR);
   }
 
   // Send a start event to the main worker
-  const message: StartMessage = {
+  sendMessage({
     event: 'start',
     from: 'server',
-    to: 'pendulums',
+    to: ['pendulums'],
     time: Date.now(),
     data: {
       options,
     },
-  };
-  worker.postMessage(message);
+  } as StartMessage);
+
   logger.info('Simulation started');
 
   // // Handle state updates from the thread
@@ -174,18 +194,17 @@ const start = (options: SimulationOptions) => {
  */
 function stop() {
   // Fail if the simulation is not running
-  if (!isRunning()) {
+  if (!areAllSimulating()) {
     throw new RouteError(HttpStatusCodes.CONFLICT, NOT_RUNNING_ERR);
   }
 
   // Send a stop event to the main worker
-  const message: StopMessage = {
+  sendMessage({
     event: 'stop',
     from: 'server',
-    to: 'pendulums',
+    to: ['pendulums'],
     time: Date.now(),
-  };
-  worker.postMessage(message);
+  });
   logger.info('Simulation stopped');
 }
 
@@ -194,18 +213,17 @@ function stop() {
  */
 function pause() {
   // Fail if the simulation is not running
-  if (!isRunningBase()) {
-    throw new RouteError(HttpStatusCodes.CONFLICT, NOT_PAUSED_ERR);
+  if (!areAllRunning()) {
+    throw new RouteError(HttpStatusCodes.CONFLICT, NOT_RUNNING_ERR);
   }
 
   // Send a stop event to the main worker
-  const message: PauseMessage = {
+  sendMessage({
     event: 'pause',
     from: 'server',
-    to: 'pendulums',
+    to: ['pendulums'],
     time: Date.now(),
-  };
-  worker.postMessage(message);
+  });
   logger.info('Simulation paused');
 }
 
@@ -214,28 +232,30 @@ function pause() {
  */
 function resume() {
   // Fail if the simulation is not paused
-  if (!isPaused()) {
-    throw new RouteError(HttpStatusCodes.CONFLICT, NOT_RUNNING_ERR);
+  if (!areAllPaused()) {
+    throw new RouteError(HttpStatusCodes.CONFLICT, NOT_PAUSED_ERR);
   }
 
   // Send a stop event to the main worker
-  const message: ResumeMessage = {
+  sendMessage({
     event: 'resume',
     from: 'server',
-    to: 'pendulums',
+    to: ['pendulums'],
     time: Date.now(),
-  };
-  worker.postMessage(message);
+  });
+
   logger.info('Simulation resumed');
 }
 
 /**
  * Returns the current simulation status
  */
-function getStatus() {
+function get() {
   return {
     options,
-    states,
+    states: options.pendulums.map((pendulum, index) =>
+      getState(f64, un8, index),
+    ),
   };
 }
 
@@ -243,22 +263,46 @@ function getStatus() {
                             Private Functions
 ******************************************************************************/
 
-function isRunningBase(): boolean {
-  return states.every((x) => ['running'].includes(x.status));
+/**
+ * Returns true if all pendulums are running (RUNNING)
+ */
+function areAllRunning(): boolean {
+  return options.pendulums
+    .map((_, index) => getStatus(un8, index))
+    .every((x) => [PendulumStatus.RUNNING].includes(x));
 }
 
-function isRunning(): boolean {
-  return states.every((x) =>
-    ['running', 'stopped', 'restarting'].includes(x.status),
-  );
+/**
+ * Returns true if all pendulums are simulating (RUNNING, PAUSED, STOPPED or RESTARTING)
+ */
+function areAllSimulating(): boolean {
+  return options.pendulums
+    .map((_, index) => getStatus(un8, index))
+    .every((x) =>
+      [
+        PendulumStatus.RUNNING,
+        PendulumStatus.PAUSED,
+        PendulumStatus.WAITING_FOR_RESTART,
+      ].includes(x),
+    );
 }
 
-function isStopped(): boolean {
-  return states.every((x) => ['idle', 'error'].includes(x.status));
+/**
+ * Returns true if all pendulums are stopped (IDLE or ERROR)
+ */
+function areAllPaused(): boolean {
+  return options.pendulums
+    .map((_, index) => getStatus(un8, index))
+    .every((x) => [PendulumStatus.PAUSED].includes(x));
 }
 
-function isPaused(): boolean {
-  return states.every((x) => ['paused'].includes(x.status));
+/**
+ * Returns true if all pendulums are stopped (IDLE or ERROR)
+ */
+function areAllStopped(): boolean {
+  return options.pendulums
+    .map((_, index) => getStatus(un8, index))
+    .every((x) => [PendulumStatus.IDLE, PendulumStatus.ERROR].includes(x));
 }
 
 /**
@@ -316,5 +360,5 @@ export default {
   stop,
   pause,
   resume,
-  getStatus,
+  get,
 } as const;

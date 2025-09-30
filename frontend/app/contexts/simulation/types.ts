@@ -1,6 +1,7 @@
 export interface PendulumOptions {
   angle: number; // In radians
   mass: number; // In kilograms
+  radius: number; // In meters
   length: number; // In meters
   anchor: {
     x: number; // In meters
@@ -8,8 +9,16 @@ export interface PendulumOptions {
   };
 }
 
+export enum PendulumStatus {
+  IDLE,
+  RUNNING,
+  PAUSED,
+  WAITING_FOR_RESTART,
+  ERROR,
+}
+
 export interface PendulumState {
-  status: 'idle' | 'running' | 'paused' | 'stopped' | 'restarting' | 'error';
+  status: PendulumStatus;
   angle: number; // In radians
   position: {
     x: number;

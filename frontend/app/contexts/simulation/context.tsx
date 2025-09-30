@@ -1,8 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import type {
-  PendulumOptions,
-  PendulumState,
-  SimulationOptions,
+import {
+  PendulumStatus,
+  type PendulumOptions,
+  type PendulumState,
+  type SimulationOptions,
 } from './types';
 import useWebSocket, { ReadyState } from 'react-use-websocket-lite';
 import type { StateMessage, WSMessage } from '~/common/types/WSMessages';
@@ -198,7 +199,8 @@ export const SimulationProvider = ({
 
   const setPosition = (index: number, position: { x: number; y: number }) => {
     // All pendulums must be idle
-    if (!states.every((pendulum) => pendulum.status === 'idle')) return;
+    if (!states.every((pendulum) => pendulum.status === PendulumStatus.IDLE))
+      return;
     if (index < 0 || index >= options.pendulums.length) return;
     const angle = calculateAngle(position, options.pendulums[index]);
     setOptions((prev) => {
@@ -223,7 +225,8 @@ export const SimulationProvider = ({
 
   const setAnchor = (index: number, position: { x: number; y: number }) => {
     // All pendulums must be idle
-    if (!states.every((pendulum) => pendulum.status === 'idle')) return;
+    if (!states.every((pendulum) => pendulum.status === PendulumStatus.IDLE))
+      return;
     if (index < 0 || index >= options.pendulums.length) return;
     setOptions((prev) => {
       const newOptions = { ...prev };

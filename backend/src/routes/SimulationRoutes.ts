@@ -17,6 +17,7 @@ const Validators = {
     pendulums: testObjectArray({
       angle: isNumber,
       mass: isNumber,
+      radius: isNumber,
       length: isNumber,
       anchor: testObject({
         x: isNumber,
@@ -69,7 +70,7 @@ function resume(_: IReq, res: IRes) {
  * Get the current simulation status
  */
 function get(_: IReq, res: IRes) {
-  res.status(HttpStatusCodes.OK).json(SimulationService.getStatus());
+  res.status(HttpStatusCodes.OK).json(SimulationService.get());
 }
 
 /******************************************************************************

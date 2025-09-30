@@ -1,7 +1,9 @@
 import type { KonvaEventObject } from 'konva/lib/Node';
+import { useEffect, useRef, useState } from 'react';
 import { Circle, Layer, Line, Stage, Star, Text } from 'react-konva';
 import { ANCHOR_LINE_Y } from '~/common/globals/simulation';
 import { useSimulation } from '~/contexts/simulation';
+import { PendulumStatus } from '~/contexts/simulation/types';
 
 export function meta() {
   return [
@@ -10,9 +12,8 @@ export function meta() {
   ];
 }
 
-const STAGE_WIDTH = 1000;
-const STAGE_HEIGHT = 600;
-const MULTIPLIER = 1000;
+const SCENE_WIDTH = 1.0; // meters
+const SCENE_HEIGHT = 0.6; // meters
 
 const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
   const stage = e.target.getStage();
@@ -41,34 +42,72 @@ export default function Home() {
 
   if (!isReady) return null;
 
-  const isState = (state: string): boolean => {
+  // State to track current scale and dimensions
+  const [stageSize, setStageSize] = useState({
+    width: SCENE_WIDTH,
+    height: SCENE_HEIGHT,
+    scale: 1,
+  });
+
+  // Reference to parent container
+  const containerRef = useRef(null);
+
+  // Function to handle resize
+  const updateSize = () => {
+    if (!containerRef.current) return;
+
+    // Get container width
+    const containerWidth = containerRef.current.offsetWidth;
+
+    // Calculate scale
+    const scale = containerWidth / SCENE_WIDTH;
+
+    // Update state with new dimensions
+    setStageSize({
+      width: SCENE_WIDTH * scale,
+      height: SCENE_HEIGHT * scale,
+      scale: scale,
+    });
+  };
+
+  // Update on mount and when window resizes
+  useEffect(() => {
+    updateSize();
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+    };
+  }, []);
+
+  const isState = (state: PendulumStatus): boolean => {
     return states.every((pendulum) => pendulum.status === state);
   };
 
   const circles = states.map((pendulum, index) => (
     <Circle
       key={index}
-      x={pendulum.position.x * MULTIPLIER}
-      y={pendulum.position.y * MULTIPLIER}
-      radius={30}
+      x={pendulum.position.x}
+      y={pendulum.position.y}
+      radius={options.pendulums[index].radius}
       fill="#7e98c4"
-      draggable={isState('idle')}
+      draggable={isState(PendulumStatus.IDLE)}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
       onDragMove={(e) => {
         const boundedPosition = {
-          x: Math.max(0, Math.min(e.target.x(), STAGE_WIDTH)),
-          y: Math.max(ANCHOR_LINE_Y * MULTIPLIER, e.target.y()),
+          x: Math.max(0, Math.min(e.target.x(), SCENE_WIDTH)),
+          y: Math.max(ANCHOR_LINE_Y, e.target.y()),
         };
         e.target.setPosition(boundedPosition);
         setPosition(index, {
-          x: boundedPosition.x / MULTIPLIER,
-          y: boundedPosition.y / MULTIPLIER,
+          x: boundedPosition.x,
+          y: boundedPosition.y,
         });
       }}
       shadowColor="black"
-      shadowBlur={10}
-      shadowOffset={{ x: 10, y: 10 }}
+      shadowBlur={0.01}
+      shadowOffset={{ x: 0.01, y: 0.01 }}
       shadowOpacity={0.5}
     />
   ));
@@ -77,16 +116,16 @@ export default function Home() {
     <Line
       key={index}
       points={[
-        options.pendulums[index].anchor.x * MULTIPLIER,
-        options.pendulums[index].anchor.y * MULTIPLIER,
-        pendulum.position.x * MULTIPLIER,
-        pendulum.position.y * MULTIPLIER,
+        options.pendulums[index].anchor.x,
+        options.pendulums[index].anchor.y,
+        pendulum.position.x,
+        pendulum.position.y,
       ]}
       stroke="#7e98c4"
-      strokeWidth={5}
+      strokeWidth={0.005}
       shadowColor="black"
-      shadowBlur={10}
-      shadowOffset={{ x: 10, y: 10 }}
+      shadowBlur={0.01}
+      shadowOffset={{ x: 0.01, y: 0.01 }}
       shadowOpacity={0.5}
     />
   ));
@@ -94,124 +133,131 @@ export default function Home() {
   const anchors = options.pendulums.map((pendulum, index) => (
     <Star
       key={index}
-      x={pendulum.anchor.x * MULTIPLIER}
-      y={pendulum.anchor.y * MULTIPLIER}
+      x={pendulum.anchor.x}
+      y={pendulum.anchor.y}
       numPoints={6}
-      innerRadius={6}
-      outerRadius={8}
+      innerRadius={0.006}
+      outerRadius={0.008}
       fill="yellow"
-      draggable={isState('idle')}
+      draggable={isState(PendulumStatus.IDLE)}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
       onDragMove={(e) => {
         const boundedPosition = {
-          x: Math.max(0, Math.min(e.target.x(), STAGE_WIDTH)),
-          y: ANCHOR_LINE_Y * MULTIPLIER,
+          x: Math.max(0, Math.min(e.target.x(), SCENE_WIDTH)),
+          y: ANCHOR_LINE_Y,
         };
         e.target.setPosition(boundedPosition);
         setAnchor(index, {
-          x: boundedPosition.x / MULTIPLIER,
-          y: boundedPosition.y / MULTIPLIER,
+          x: boundedPosition.x,
+          y: boundedPosition.y,
         });
+        setPosition(index, states[index].position);
       }}
     />
   ));
 
   const anchorsInfos =
-    isState('idle') &&
+    isState(PendulumStatus.IDLE) &&
     options.pendulums.map((pendulum, index) => (
       <Text
         key={index}
         text={pendulum.anchor.x.toFixed(2) + ' m'}
-        x={pendulum.anchor.x * MULTIPLIER - 50}
-        y={pendulum.anchor.y * MULTIPLIER - 30}
-        fontSize={16}
+        x={pendulum.anchor.x - 0.05}
+        y={pendulum.anchor.y - 0.03}
+        fontSize={0.02}
         align="center"
-        width={100}
+        width={0.1}
         fill="white"
       />
     ));
 
   const lengthsInfos =
-    isState('idle') &&
+    isState(PendulumStatus.IDLE) &&
     options.pendulums.map((pendulum, index) => (
       <Text
         key={index}
         text={pendulum.length.toFixed(2) + ' m'}
         x={
-          (pendulum.anchor.x +
-            (states[index].position.x - pendulum.anchor.x) / 2) *
-            MULTIPLIER -
-          50
+          pendulum.anchor.x +
+          (states[index].position.x - pendulum.anchor.x) / 2 -
+          0.05
         }
         y={
-          (pendulum.anchor.y +
-            (states[index].position.y - pendulum.anchor.y) / 2) *
-            MULTIPLIER -
-          8
+          pendulum.anchor.y +
+          (states[index].position.y - pendulum.anchor.y) / 2 -
+          0.008
         }
-        fontSize={16}
+        fontSize={0.02}
         align="center"
-        width={100}
-        height={16}
+        width={0.1}
+        height={0.016}
         fill="white"
       />
     ));
 
   const anglesInfos =
-    isState('idle') &&
+    isState(PendulumStatus.IDLE) &&
     options.pendulums.map((pendulum, index) => (
       <Text
         key={index}
         text={((pendulum.angle * 180) / Math.PI).toFixed(2) + '°'}
-        x={
-          pendulum.anchor.x * MULTIPLIER +
-          (pendulum.angle < 0 ? -1 : 1) * 40 -
-          50
-        }
-        y={pendulum.anchor.y + 60}
-        fontSize={16}
+        x={pendulum.anchor.x + (pendulum.angle < 0 ? -1 : 1) * 0.05 - 0.05}
+        y={pendulum.anchor.y + 0.006}
+        fontSize={0.02}
         align="center"
-        width={100}
-        height={16}
+        width={0.1}
+        height={0.016}
         fill="white"
       />
     ));
 
   return (
-    <div className="bg-[#1e293b] p-4 text-white">
-      <button onClick={start} disabled={!isState('idle') && !isState('error')}>
+    <div className="w-screen h-screen bg-[#0d1521] px-8 py-12 text-white flex flex-col items-center">
+      <button
+        onClick={start}
+        disabled={
+          !isState(PendulumStatus.IDLE) && !isState(PendulumStatus.ERROR)
+        }
+      >
         Start
       </button>
-      <button onClick={stop} disabled={isState('idle') || isState('error')}>
+      <button
+        onClick={stop}
+        disabled={isState(PendulumStatus.IDLE) || isState(PendulumStatus.ERROR)}
+      >
         Stop
       </button>
-      <button onClick={pause} disabled={!isState('running')}>
+      <button onClick={pause} disabled={!isState(PendulumStatus.RUNNING)}>
         Pause
       </button>
-      <button onClick={resume} disabled={!isState('paused')}>
+      <button onClick={resume} disabled={!isState(PendulumStatus.PAUSED)}>
         Resume
       </button>
-      <Stage width={STAGE_WIDTH} height={STAGE_HEIGHT}>
-        <Layer>
-          <Line
-            points={[
-              0,
-              ANCHOR_LINE_Y * MULTIPLIER,
-              STAGE_WIDTH,
-              ANCHOR_LINE_Y * MULTIPLIER,
-            ]}
-            stroke="#050a12"
-            strokeWidth={8}
-          />
-          {arms}
-          {circles}
-          {anchors}
-          {anchorsInfos}
-          {lengthsInfos}
-          {anglesInfos}
-        </Layer>
-      </Stage>
+      <div className="w-full max-w-6xl bg-[#1e293b] rounded-xl border-4 border-white">
+        <div ref={containerRef} className="w-full">
+          <Stage
+            width={stageSize.width}
+            height={stageSize.height}
+            scaleX={stageSize.scale}
+            scaleY={stageSize.scale}
+          >
+            <Layer>
+              <Line
+                points={[0, ANCHOR_LINE_Y, SCENE_WIDTH, ANCHOR_LINE_Y]}
+                stroke="#050a12"
+                strokeWidth={0.008}
+              />
+              {arms}
+              {circles}
+              {anchors}
+              {anchorsInfos}
+              {lengthsInfos}
+              {anglesInfos}
+            </Layer>
+          </Stage>
+        </div>
+      </div>
     </div>
   );
 }
