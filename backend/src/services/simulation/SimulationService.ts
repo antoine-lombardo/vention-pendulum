@@ -22,11 +22,11 @@ const ANCHOR_LINE_Y = 0.05;
 const DEFAULT_OPTIONS: SimulationOptions = {
   pendulums: [
     {
-      anchor: { x: 0.15, y: ANCHOR_LINE_Y },
+      anchor: { x: 0.2, y: ANCHOR_LINE_Y },
       angle: -0.5,
       length: 0.3,
-      mass: 0.2,
-      radius: 0.02,
+      mass: 0.1,
+      radius: 0.01,
     },
     {
       anchor: { x: 0.3, y: ANCHOR_LINE_Y },
@@ -39,8 +39,8 @@ const DEFAULT_OPTIONS: SimulationOptions = {
       anchor: { x: 0.45, y: ANCHOR_LINE_Y },
       angle: -0.1,
       length: 0.2,
-      mass: 0.2,
-      radius: 0.02,
+      mass: 0.3,
+      radius: 0.03,
     },
     {
       anchor: { x: 0.6, y: ANCHOR_LINE_Y },
@@ -53,8 +53,8 @@ const DEFAULT_OPTIONS: SimulationOptions = {
       anchor: { x: 0.75, y: ANCHOR_LINE_Y },
       angle: 0.45,
       length: 0.1,
-      mass: 0.2,
-      radius: 0.02,
+      mass: 0.25,
+      radius: 0.025,
     },
   ],
   wind: {
