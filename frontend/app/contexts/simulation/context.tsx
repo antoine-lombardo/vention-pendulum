@@ -74,6 +74,20 @@ const calculateAngle = (
   );
 };
 
+const calculatePosition = (
+  angle: number,
+  options: PendulumOptions,
+): { x: number; y: number } => {
+  if (angle === 0)
+    return { x: options.anchor.x, y: options.anchor.y + options.length };
+  return {
+    x:
+      options.anchor.x +
+      (angle < 0 ? -1 : 1) * Math.sin(Math.abs(angle)) * options.length,
+    y: options.anchor.y + Math.cos(Math.abs(angle)) * options.length,
+  };
+};
+
 const SimulationContext = createContext<{
   isReady: boolean;
   states: PendulumState[];
@@ -85,6 +99,9 @@ const SimulationContext = createContext<{
   resume: () => void;
   setPosition: (index: number, position: { x: number; y: number }) => void;
   setAnchor: (index: number, position: { x: number; y: number }) => void;
+  setAngle: (index: number, angle: number) => void;
+  setLength: (index: number, length: number) => void;
+  setRadius: (index: number, radius: number) => void;
 }>({
   isReady: false,
   states: [],
@@ -106,6 +123,15 @@ const SimulationContext = createContext<{
     /* empty */
   },
   setAnchor: () => {
+    /* empty */
+  },
+  setAngle: () => {
+    /* empty */
+  },
+  setLength: () => {
+    /* empty */
+  },
+  setRadius: () => {
     /* empty */
   },
 });
@@ -253,6 +279,63 @@ export const SimulationProvider = ({
     });
   };
 
+  const setAngle = (index: number, angle: number) => {
+    // All pendulums must be idle
+    if (!states.every((pendulum) => pendulum.status === PendulumStatus.IDLE))
+      return;
+    if (index < 0 || index >= options.pendulums.length) return;
+    setOptions((prev) => {
+      const newOptions = { ...prev };
+      newOptions.pendulums[index] = {
+        ...newOptions.pendulums[index],
+        angle,
+      };
+      return newOptions;
+    });
+    setStates((prev) => {
+      const newStates = [...prev];
+      newStates[index] = {
+        ...newStates[index],
+        angle,
+        position: calculatePosition(angle, options.pendulums[index]),
+      };
+      return newStates;
+    });
+  };
+
+  const setLength = (index: number, length: number) => {
+    setOptions((prev) => {
+      const newOptions = { ...prev };
+      newOptions.pendulums[index] = {
+        ...newOptions.pendulums[index],
+        length,
+      };
+      return newOptions;
+    });
+    setStates((prev) => {
+      const newStates = [...prev];
+      newStates[index] = {
+        ...newStates[index],
+        position: calculatePosition(options.pendulums[index].angle, {
+          ...options.pendulums[index],
+          length,
+        }),
+      };
+      return newStates;
+    });
+  };
+
+  const setRadius = (index: number, radius: number) => {
+    setOptions((prev) => {
+      const newOptions = { ...prev };
+      newOptions.pendulums[index] = {
+        ...newOptions.pendulums[index],
+        radius,
+      };
+      return newOptions;
+    });
+  };
+
   return (
     <SimulationContext.Provider
       value={{
@@ -266,6 +349,9 @@ export const SimulationProvider = ({
         resume,
         setPosition,
         setAnchor,
+        setAngle,
+        setLength,
+        setRadius,
       }}
     >
       {children}

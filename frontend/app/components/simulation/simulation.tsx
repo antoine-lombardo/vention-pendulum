@@ -1,4 +1,4 @@
-import { Layer, Line, Stage } from 'react-konva';
+import { Layer, Line, Stage, Text } from 'react-konva';
 import {
   ANCHOR_LINE_Y,
   SCENE_HEIGHT,
@@ -13,6 +13,7 @@ import { PendulumAnchorPosition } from './pendulum-anchor-position';
 import { PendulumStatus } from '~/contexts/simulation/types';
 import { useSimulation } from '~/contexts/simulation';
 import { useEffect, useRef, useState } from 'react';
+import { PendulumMass } from './pendulum-mass';
 
 export function Simulation() {
   const { isReady, states, options, getCommonStatus } = useSimulation();
@@ -67,9 +68,7 @@ export function Simulation() {
   // Scene Objects
   //
 
-  const isDraggable = [PendulumStatus.IDLE, PendulumStatus.ERROR].includes(
-    getCommonStatus(),
-  );
+  const isDraggable = getCommonStatus() === PendulumStatus.IDLE;
 
   const weights = states.map((_, index) => (
     <PendulumWeight index={index} key={index} />
@@ -95,6 +94,34 @@ export function Simulation() {
     options.pendulums.map((_, index) => (
       <PendulumAnchorPosition index={index} key={index} />
     ));
+  const masses =
+    isDraggable &&
+    options.pendulums.map((_, index) => (
+      <PendulumMass index={index} key={index} />
+    ));
+
+  //
+  // Simulation status string
+  //
+
+  let status = 'N/A';
+  switch (getCommonStatus()) {
+    case PendulumStatus.IDLE:
+      status = 'Idle';
+      break;
+    case PendulumStatus.RUNNING:
+      status = 'Running';
+      break;
+    case PendulumStatus.PAUSED:
+      status = 'Paused';
+      break;
+    case PendulumStatus.WAITING_FOR_RESTART:
+      status = 'Restarting';
+      break;
+    case PendulumStatus.NOT_SYNCED:
+      status = 'Not Synced';
+      break;
+  }
 
   //
   // Return component
@@ -102,7 +129,7 @@ export function Simulation() {
 
   return (
     <div className="w-full max-w-6xl bg-[#1e293b] rounded-xl shadow-xl shadow-gray-900">
-      <div ref={containerRef} className="w-full">
+      <div ref={containerRef} className="w-full relative">
         <Stage
           width={stageSize.width}
           height={stageSize.height}
@@ -121,8 +148,10 @@ export function Simulation() {
             {lengths}
             {angles}
             {anchorPositions}
+            {masses}
           </Layer>
         </Stage>
+        <div className="absolute bottom-2 right-4 text-lg">{status}</div>
       </div>
     </div>
   );

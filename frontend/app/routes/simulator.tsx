@@ -5,10 +5,11 @@ import {
   StopIcon,
 } from '@heroicons/react/20/solid';
 
-import { Simulation } from '~/components/simulation';
+import { Simulation, SimulationConfig } from '~/components/simulation';
 import Button from '~/components/ui/Button';
 import { useSimulation } from '~/contexts/simulation';
 import { PendulumStatus } from '~/contexts/simulation/types';
+import VentionLogo from '~/assets/images/vention.svg';
 
 export function meta() {
   return [
@@ -25,15 +26,15 @@ export default function Simulator() {
 
   return (
     <div className="w-screen h-screen bg-[#0d1521] px-8 py-12 text-white flex flex-col items-center gap-2">
+      <img src={VentionLogo} alt="Vention Logo" className="w-lg" />
+      <div className="w-full max-w-xl text-center text-4xl font-medium mb-8">
+        Pendulum Simulator
+      </div>
       <div className="flex flex-row gap-2 justify-center">
         <Button
           icon={<PlayIcon className="size-6" />}
           color="green"
-          disabled={
-            ![PendulumStatus.IDLE, PendulumStatus.ERROR].includes(
-              getCommonStatus(),
-            )
-          }
+          disabled={getCommonStatus() !== PendulumStatus.IDLE}
           onClick={start}
         >
           Start
@@ -41,9 +42,7 @@ export default function Simulator() {
         <Button
           icon={<StopIcon className="size-6" />}
           color="red"
-          disabled={[PendulumStatus.IDLE, PendulumStatus.ERROR].includes(
-            getCommonStatus(),
-          )}
+          disabled={getCommonStatus() === PendulumStatus.IDLE}
           onClick={stop}
         >
           Stop
@@ -66,6 +65,7 @@ export default function Simulator() {
         </Button>
       </div>
       <Simulation />
+      <SimulationConfig />
     </div>
   );
 }

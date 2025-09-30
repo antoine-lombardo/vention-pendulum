@@ -8,9 +8,7 @@ export function PendulumAnchor(props: { index: number }) {
   const { states, options, getCommonStatus, setAnchor, setPosition } =
     useSimulation();
 
-  const isDraggable = [PendulumStatus.IDLE, PendulumStatus.ERROR].includes(
-    getCommonStatus(),
-  );
+  const isDraggable = getCommonStatus() === PendulumStatus.IDLE;
 
   const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
     const stage = e.target.getStage();

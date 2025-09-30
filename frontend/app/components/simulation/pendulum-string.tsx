@@ -1,4 +1,5 @@
 import { Line } from 'react-konva';
+import { PENDULUM_COLORS } from '~/common/globals/simulation';
 import { useSimulation } from '~/contexts/simulation';
 
 export function PendulumString(props: { index: number }) {
@@ -13,7 +14,7 @@ export function PendulumString(props: { index: number }) {
         states[props.index].position.x,
         states[props.index].position.y,
       ]}
-      stroke="#7e98c4"
+      stroke={PENDULUM_COLORS[props.index]}
       strokeWidth={0.005}
       shadowColor="#111827"
       shadowBlur={0.02}

@@ -302,7 +302,7 @@ function areAllPaused(): boolean {
 function areAllStopped(): boolean {
   return options.pendulums
     .map((_, index) => getStatus(un8, index))
-    .every((x) => [PendulumStatus.IDLE, PendulumStatus.ERROR].includes(x));
+    .every((x) => x === PendulumStatus.IDLE);
 }
 
 /**

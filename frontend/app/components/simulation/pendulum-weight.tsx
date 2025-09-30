@@ -1,15 +1,17 @@
 import type { KonvaEventObject } from 'konva/lib/Node';
 import { Circle } from 'react-konva';
-import { ANCHOR_LINE_Y, SCENE_WIDTH } from '~/common/globals/simulation';
+import {
+  ANCHOR_LINE_Y,
+  PENDULUM_COLORS,
+  SCENE_WIDTH,
+} from '~/common/globals/simulation';
 import { useSimulation } from '~/contexts/simulation';
 import { PendulumStatus } from '~/contexts/simulation/types';
 
 export function PendulumWeight(props: { index: number }) {
   const { states, options, getCommonStatus, setPosition } = useSimulation();
 
-  const isDraggable = [PendulumStatus.IDLE, PendulumStatus.ERROR].includes(
-    getCommonStatus(),
-  );
+  const isDraggable = getCommonStatus() === PendulumStatus.IDLE;
 
   const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
     const stage = e.target.getStage();
@@ -42,7 +44,7 @@ export function PendulumWeight(props: { index: number }) {
       x={states[props.index].position.x}
       y={states[props.index].position.y}
       radius={options.pendulums[props.index].radius}
-      fill="#7e98c4"
+      fill={PENDULUM_COLORS[props.index]}
       draggable={isDraggable}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
