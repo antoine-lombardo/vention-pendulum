@@ -1,9 +1,13 @@
-import type { SimulationState } from '~/contexts/simulation/types';
+import type {
+  PendulumState,
+  SimulationOptions,
+} from '~/contexts/simulation/types';
 
 export interface APIMessage {
   message: string;
 }
 
-export interface SimulationStartResponse extends APIMessage {
-  state: SimulationState;
+export interface SimulationStatusResponse {
+  options: SimulationOptions;
+  states: PendulumState[];
 }

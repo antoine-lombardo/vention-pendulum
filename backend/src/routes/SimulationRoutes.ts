@@ -1,6 +1,6 @@
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 
-import SimulationService from '@src/services/SimulationService';
+import SimulationService from '@src/services/simulation/SimulationService';
 
 import { IReq, IRes } from './common/types';
 import { parseReq } from './common/util';
@@ -37,7 +37,6 @@ function start(req: IReq, res: IRes) {
   const options = Validators.start(req.body) as SimulationOptions;
   SimulationService.start(options);
   res.status(HttpStatusCodes.OK).json({
-    ...SimulationService.getStatus(),
     message: 'Simulation started',
   });
 }
@@ -48,6 +47,22 @@ function start(req: IReq, res: IRes) {
 function stop(_: IReq, res: IRes) {
   SimulationService.stop();
   res.status(HttpStatusCodes.OK).json({ message: 'Simulation stopped' });
+}
+
+/**
+ * Pause the simulation
+ */
+function pause(_: IReq, res: IRes) {
+  SimulationService.pause();
+  res.status(HttpStatusCodes.OK).json({ message: 'Simulation paused' });
+}
+
+/**
+ * Resume the simulation
+ */
+function resume(_: IReq, res: IRes) {
+  SimulationService.resume();
+  res.status(HttpStatusCodes.OK).json({ message: 'Simulation resumed' });
 }
 
 /**
@@ -64,5 +79,7 @@ function get(_: IReq, res: IRes) {
 export default {
   start,
   stop,
+  pause,
+  resume,
   get,
 } as const;

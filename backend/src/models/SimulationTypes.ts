@@ -1,5 +1,3 @@
-import { Worker } from 'worker_threads';
-
 export interface PendulumOptions {
   angle: number; // In radians
   mass: number; // In kilograms
@@ -11,6 +9,7 @@ export interface PendulumOptions {
 }
 
 export interface PendulumState {
+  status: 'idle' | 'running' | 'paused' | 'stopped' | 'restarting' | 'error';
   angle: number; // In radians
   position: {
     x: number;
@@ -25,16 +24,4 @@ export interface SimulationOptions {
     direction: number;
     velocity: number;
   };
-}
-
-export interface CurrentSimulation {
-  options: SimulationOptions;
-  worker?: Worker;
-  state: SimulationState;
-}
-
-export interface SimulationState {
-  status: 'idle' | 'running' | 'stopped' | 'ended' | 'error';
-  elapsedTime: number;
-  pendulums: PendulumState[];
 }

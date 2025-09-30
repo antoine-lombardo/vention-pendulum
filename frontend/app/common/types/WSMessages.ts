@@ -1,31 +1,18 @@
-import type {
-  SimulationOptions,
-  SimulationState,
-} from '~/contexts/simulation/types';
+import type { PendulumState } from '~/contexts/simulation/types';
 
-export interface SimulationUpdateMessage {
-  event: 'simulation_update';
+export interface WorkerMessage {
+  event: string;
+  from: 'server' | 'main' | number;
+  to: 'server' | 'main' | number | 'pendulums';
+  time: number;
+}
+
+export interface StateMessage extends WorkerMessage {
+  event: 'state';
+  from: number;
   data: {
-    state: SimulationState;
+    state: PendulumState;
   };
 }
 
-export interface SimulationStartMessage {
-  event: 'simulation_start';
-  data: {
-    options: SimulationOptions;
-    state: SimulationState;
-  };
-}
-
-export interface SimulationErrorMessage {
-  event: 'simulation_error';
-  data: {
-    errorMessage: string;
-  };
-}
-
-export type WSMessage =
-  | SimulationStartMessage
-  | SimulationUpdateMessage
-  | SimulationErrorMessage;
+export type WSMessage = WorkerMessage | StateMessage;

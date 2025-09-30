@@ -11,6 +11,8 @@ export default {
     Base: '/simulation',
     Start: '/start',
     Stop: '/stop',
+    Pause: '/pause',
+    Resume: '/resume',
     Get: '/',
   },
 } as const;

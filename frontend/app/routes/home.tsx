@@ -27,19 +27,32 @@ const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
 };
 
 export default function Home() {
-  const { state, options, start, stop, setPosition, setAnchor } =
-    useSimulation();
+  const {
+    isReady,
+    states,
+    options,
+    start,
+    stop,
+    pause,
+    resume,
+    setPosition,
+    setAnchor,
+  } = useSimulation();
 
-  if (!state || !state.pendulums) return null;
+  if (!isReady) return null;
 
-  const circles = state.pendulums.map((pendulum, index) => (
+  const isState = (state: string): boolean => {
+    return states.every((pendulum) => pendulum.status === state);
+  };
+
+  const circles = states.map((pendulum, index) => (
     <Circle
       key={index}
       x={pendulum.position.x * MULTIPLIER}
       y={pendulum.position.y * MULTIPLIER}
       radius={30}
       fill="red"
-      draggable={state.status !== 'running'}
+      draggable={isState('idle')}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
       onDragMove={(e) => {
@@ -56,7 +69,7 @@ export default function Home() {
     />
   ));
 
-  const arms = state.pendulums.map((pendulum, index) => (
+  const arms = states.map((pendulum, index) => (
     <Line
       key={index}
       points={[
@@ -69,6 +82,7 @@ export default function Home() {
       strokeWidth={8}
     />
   ));
+
   const anchors = options.pendulums.map((pendulum, index) => (
     <Circle
       key={index}
@@ -76,7 +90,7 @@ export default function Home() {
       y={pendulum.anchor.y * MULTIPLIER}
       radius={10}
       fill="yellow"
-      draggable={state.status !== 'running'}
+      draggable={isState('idle')}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
       onDragMove={(e) => {
@@ -94,7 +108,7 @@ export default function Home() {
   ));
 
   const anchorsInfos =
-    state.status !== 'running' &&
+    isState('idle') &&
     options.pendulums.map((pendulum, index) => (
       <Text
         key={index}
@@ -109,20 +123,20 @@ export default function Home() {
     ));
 
   const lengthsInfos =
-    state.status !== 'running' &&
+    isState('idle') &&
     options.pendulums.map((pendulum, index) => (
       <Text
         key={index}
         text={pendulum.length.toFixed(2) + ' m'}
         x={
           (pendulum.anchor.x +
-            (state.pendulums[index].position.x - pendulum.anchor.x) / 2) *
+            (states[index].position.x - pendulum.anchor.x) / 2) *
             MULTIPLIER -
           50
         }
         y={
           (pendulum.anchor.y +
-            (state.pendulums[index].position.y - pendulum.anchor.y) / 2) *
+            (states[index].position.y - pendulum.anchor.y) / 2) *
             MULTIPLIER -
           8
         }
@@ -135,7 +149,7 @@ export default function Home() {
     ));
 
   const anglesInfos =
-    state.status !== 'running' &&
+    isState('idle') &&
     options.pendulums.map((pendulum, index) => (
       <Text
         key={index}
@@ -156,15 +170,18 @@ export default function Home() {
 
   return (
     <div className="bg-[#1e293b] p-4 text-white">
-      <button onClick={start} disabled={state?.status === 'running'}>
+      <button onClick={start} disabled={!isState('idle') && !isState('error')}>
         Start
       </button>
-      <button onClick={stop} disabled={state?.status !== 'running'}>
+      <button onClick={stop} disabled={isState('idle') || isState('error')}>
         Stop
       </button>
-      <div className="text-2xl font-semibold">
-        {state.elapsedTime.toFixed(2) + ' s'}
-      </div>
+      <button onClick={pause} disabled={!isState('running')}>
+        Pause
+      </button>
+      <button onClick={resume} disabled={!isState('paused')}>
+        Resume
+      </button>
       <Stage width={STAGE_WIDTH} height={STAGE_HEIGHT}>
         <Layer>
           <Line

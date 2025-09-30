@@ -10,3 +10,9 @@ export const calculatePosition = (angle: number, options: PendulumOptions) => {
     y: options.anchor.y + Math.cos(Math.abs(angle)) * options.length,
   };
 };
+
+export const calculateAngle = (time: number, options: PendulumOptions) => {
+  if (time < 0) time = 0;
+  // Ref: https://www.acs.psu.edu/drussell/Demos/Pendulum/Pendulum.html
+  return options.angle * Math.cos(Math.sqrt(9.81 / options.length) * time);
+};
