@@ -1,18 +1,12 @@
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 import { RouteError } from '@src/common/util/route-errors';
-import {
-  SimulationOptions,
-  PendulumState,
-  PendulumStatus,
-} from '@src/models/SimulationTypes';
+import { SimulationOptions, PendulumStatus } from '@src/models/SimulationTypes';
 import { broadcast } from '@src/server';
 import { Worker } from 'worker_threads';
 import logger from 'jet-logger';
-import { calculatePosition } from './SimulationUtils';
 import {
   MainWorkerData,
   StartMessage,
-  StateMessage,
   WorkerMessage,
 } from './workers/WorkerTypes';
 import { getState, getStatus } from './workers/WorkerUtils';
@@ -153,40 +147,6 @@ const start = (options: SimulationOptions) => {
   } as StartMessage);
 
   logger.info('Simulation started');
-
-  // // Handle state updates from the thread
-  // currentSimulation.worker.on('message', (state: SimulationState) => {
-  //   if (!currentSimulation) return;
-  //   currentSimulation.state = state;
-  //   _emitUpdate();
-  // });
-  //
-  // // Handle errors from the thread
-  // currentSimulation.worker.on('error', (err) => {
-  //   if (!currentSimulation || currentSimulation.state.status !== 'running')
-  //     return;
-  //   currentSimulation.state.status = 'error';
-  //   _emitError(err.message);
-  //   _emitUpdate();
-  //   logger.err(`Simulation error: ${err.message}`);
-  // });
-  //
-  // // Handle process termination from the thread
-  // currentSimulation.worker.on('exit', (code) => {
-  //   if (!currentSimulation || currentSimulation.state.status !== 'running')
-  //     return;
-  //   if (code !== 0) {
-  //     currentSimulation.state.status = 'error';
-  //     _emitError(`Exited with error code ${code}.`);
-  //     _emitUpdate();
-  //     logger.err(`Simulation exited with error code ${code}`);
-  //   } else {
-  //     currentSimulation.state.status = 'ended';
-  //     _emitUpdate();
-  //     logger.info('Simulation ended');
-  //   }
-  // });
-  // _emitStart();
 };
 
 /**
@@ -304,52 +264,6 @@ function areAllStopped(): boolean {
     .map((_, index) => getStatus(un8, index))
     .every((x) => x === PendulumStatus.IDLE);
 }
-
-/**
- * Notify simulation starts to users
- */
-// function _emitStart() {
-//   if (!currentSimulation) return;
-//   broadcast(
-//     JSON.stringify({
-//       event: 'simulation_start',
-//       data: {
-//         options: currentSimulation.options,
-//         state: currentSimulation.state,
-//       },
-//     }),
-//   );
-// }
-
-/**
- * Notify simulation updates to users
- */
-// function _emitUpdate() {
-//   if (!currentSimulation) return;
-//   broadcast(
-//     JSON.stringify({
-//       event: 'simulation_update',
-//       data: {
-//         state: currentSimulation.state,
-//       },
-//     }),
-//   );
-// }
-
-/**
- * Notify simulation errors to users
- */
-// function _emitError(errorMessage: string) {
-//   if (!currentSimulation) return;
-//   broadcast(
-//     JSON.stringify({
-//       event: 'simulation_error',
-//       data: {
-//         errorMessage,
-//       },
-//     }),
-//   );
-// }
 
 /******************************************************************************
                                 Export default

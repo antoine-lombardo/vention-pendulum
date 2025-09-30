@@ -1,4 +1,4 @@
-import { PendulumState, PendulumStatus } from '@src/models/SimulationTypes';
+import { PendulumStatus } from '@src/models/SimulationTypes';
 import { parentPort, workerData } from 'worker_threads';
 import { calculatePosition, calculateAngle } from '../SimulationUtils';
 import {

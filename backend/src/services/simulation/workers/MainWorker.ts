@@ -10,13 +10,6 @@ const options = (workerData as MainWorkerData).options;
 const workers: Worker[] = [];
 
 /******************************************************************************
-                              Shared Arrays
-******************************************************************************/
-
-const f64 = new Float64Array((workerData as MainWorkerData).f64);
-const un8 = new Uint8Array((workerData as MainWorkerData).un8);
-
-/******************************************************************************
                                 Functions
 ******************************************************************************/
 
@@ -44,7 +37,7 @@ const messageProxy = (message: WorkerMessage) => {
   }
 };
 
-const messageHandler = (message: WorkerMessage) => {
+const messageHandler = (_: WorkerMessage) => {
   // Nothing to handle yet
   return;
 };

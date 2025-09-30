@@ -1,4 +1,4 @@
-import { Layer, Line, Stage, Text } from 'react-konva';
+import { Layer, Line, Stage } from 'react-konva';
 import {
   ANCHOR_LINE_Y,
   SCENE_HEIGHT,
