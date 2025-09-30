@@ -6,7 +6,11 @@ import {
   type SimulationOptions,
 } from './types';
 import useWebSocket, { ReadyState } from 'react-use-websocket-lite';
-import type { StateMessage, WSMessage } from '~/common/types/WSMessages';
+import type {
+  OptionsMessage,
+  StateMessage,
+  WSMessage,
+} from '~/common/types/WSMessages';
 import axios from 'axios';
 import type {
   APIMessage,
@@ -139,7 +143,6 @@ export const SimulationProvider = ({
         message = JSON.parse(event.data);
       } catch {
         console.error('Failed to parse message:', event.data);
-        /* empty */
       }
       if (typeof message !== 'object') return;
       if (!message?.event) return;
@@ -147,8 +150,6 @@ export const SimulationProvider = ({
       switch (wsMessage.event) {
         case 'state': {
           const stateMessage = wsMessage as StateMessage;
-          // setOptions(wsMessage.data.options);
-
           setStates((prev) => {
             const newStates = [...prev];
             newStates[stateMessage.from] = stateMessage.data.state;
@@ -156,14 +157,11 @@ export const SimulationProvider = ({
           });
           break;
         }
-        // case 'simulation_update': {
-        //   if (wsMessage.data.state.status === 'idle') {
-        //     setState(getIdleState(options));
-        //   } else {
-        //     setState(wsMessage.data.state);
-        //   }
-        //   break;
-        // }
+        case 'options': {
+          const optionsMessage = wsMessage as OptionsMessage;
+          setOptions(optionsMessage.data.options);
+          break;
+        }
       }
     },
   });

@@ -80,7 +80,7 @@ const un8 = new Uint8Array(un8Buf);
                              Local variables
 ******************************************************************************/
 
-const options = { ...DEFAULT_OPTIONS };
+let options = { ...DEFAULT_OPTIONS };
 
 /******************************************************************************
                                   Workers
@@ -128,11 +128,22 @@ initWorker();
 /**
  * Start the simulation
  */
-const start = (options: SimulationOptions) => {
+const start = (newOptions: SimulationOptions) => {
   // Fail if the simulation is not stopped
   if (!areAllStopped()) {
     throw new RouteError(HttpStatusCodes.CONFLICT, ALREADY_RUNNING_ERR);
   }
+
+  options = newOptions;
+
+  broadcast(
+    JSON.stringify({
+      event: 'options',
+      data: {
+        options,
+      },
+    }),
+  );
 
   // Send a start event to the main worker
   sendMessage({

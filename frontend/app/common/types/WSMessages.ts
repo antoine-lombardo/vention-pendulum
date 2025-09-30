@@ -1,4 +1,7 @@
-import type { PendulumState } from '~/contexts/simulation/types';
+import type {
+  PendulumState,
+  SimulationOptions,
+} from '~/contexts/simulation/types';
 
 export interface WorkerMessage {
   event: string;
@@ -15,4 +18,11 @@ export interface StateMessage extends WorkerMessage {
   };
 }
 
-export type WSMessage = WorkerMessage | StateMessage;
+export interface OptionsMessage {
+  event: 'options';
+  data: {
+    options: SimulationOptions;
+  };
+}
+
+export type WSMessage = WorkerMessage | StateMessage | OptionsMessage;
