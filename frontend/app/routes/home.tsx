@@ -1,5 +1,5 @@
 import type { KonvaEventObject } from 'konva/lib/Node';
-import { Circle, Layer, Line, Stage, Text } from 'react-konva';
+import { Circle, Layer, Line, Stage, Star, Text } from 'react-konva';
 import { ANCHOR_LINE_Y } from '~/common/globals/simulation';
 import { useSimulation } from '~/contexts/simulation';
 
@@ -51,7 +51,7 @@ export default function Home() {
       x={pendulum.position.x * MULTIPLIER}
       y={pendulum.position.y * MULTIPLIER}
       radius={30}
-      fill="red"
+      fill="#7e98c4"
       draggable={isState('idle')}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
@@ -66,6 +66,10 @@ export default function Home() {
           y: boundedPosition.y / MULTIPLIER,
         });
       }}
+      shadowColor="black"
+      shadowBlur={10}
+      shadowOffset={{ x: 10, y: 10 }}
+      shadowOpacity={0.5}
     />
   ));
 
@@ -78,17 +82,23 @@ export default function Home() {
         pendulum.position.x * MULTIPLIER,
         pendulum.position.y * MULTIPLIER,
       ]}
-      stroke="green"
-      strokeWidth={8}
+      stroke="#7e98c4"
+      strokeWidth={5}
+      shadowColor="black"
+      shadowBlur={10}
+      shadowOffset={{ x: 10, y: 10 }}
+      shadowOpacity={0.5}
     />
   ));
 
   const anchors = options.pendulums.map((pendulum, index) => (
-    <Circle
+    <Star
       key={index}
       x={pendulum.anchor.x * MULTIPLIER}
       y={pendulum.anchor.y * MULTIPLIER}
-      radius={10}
+      numPoints={6}
+      innerRadius={6}
+      outerRadius={8}
       fill="yellow"
       draggable={isState('idle')}
       onMouseOver={handleMouseOver}
